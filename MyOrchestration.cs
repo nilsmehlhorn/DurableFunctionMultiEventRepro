@@ -15,22 +15,35 @@ namespace DurableFunctionMultiEventRepro
             var logger = context.CreateReplaySafeLogger(nameof(MyOrchestration));
             logger.LogInformation("Orchestrator started");
 
-            logger.LogInformation("Listen for RecurringEvent");
-            var cts = new CancellationTokenSource();
-            var unusedRecurringEvent1 = context.WaitForExternalEvent<object>("RecurringEvent", cts.Token);
+            logger.LogInformation("Listen for RecurringEvent for the first time");
+            var cts1 = new CancellationTokenSource();
+            var unusedRecurringEvent1 = context.WaitForExternalEvent<object>("RecurringEvent", cts1.Token);
 
-            logger.LogInformation("Awaiting OneTimeEvent");
-            await context.WaitForExternalEvent<object>("OneTimeEvent", CancellationToken.None);
-            logger.LogInformation("Received OneTimeEvent, cancelling first RecurringEvent listener");
+            logger.LogInformation("Await OneTimeEvent1");
+            await context.WaitForExternalEvent<object>("OneTimeEvent1", CancellationToken.None);
+            logger.LogInformation("Received OneTimeEvent1");
+            
+            logger.LogInformation("Cancel first RecurringEvent listener");
+            cts1.Cancel();
+            cts1.Dispose();
 
-            cts.Cancel();
-            cts.Dispose();
+            logger.LogInformation("Listen for RecurringEvent for the second time");
+            var cts2 = new CancellationTokenSource();
+            var unusedRecurringEvent2 = context.WaitForExternalEvent<object>("RecurringEvent", cts2.Token);
 
-            logger.LogInformation("Listen for RecurringEvent again");
-            var recurringEvent2 = context.WaitForExternalEvent<object>("RecurringEvent", CancellationToken.None);
+            logger.LogInformation("Await OneTimeEvent2");
+            await context.WaitForExternalEvent<object>("OneTimeEvent2", CancellationToken.None);
+            logger.LogInformation("Received OneTimeEvent2");
 
-            logger.LogInformation("Awaiting RecurringEvent");
-            await recurringEvent2;
+            logger.LogInformation("Cancel second RecurringEvent listener");
+            cts2.Cancel();
+            cts2.Dispose();
+
+            logger.LogInformation("Listen for RecurringEvent for the third time");
+            var recurringEvent3 = context.WaitForExternalEvent<object>("RecurringEvent", CancellationToken.None);
+
+            logger.LogInformation("Await RecurringEvent");
+            await recurringEvent3;
             logger.LogInformation("Received RecurringEvent");
         }
 
